@@ -1,5 +1,6 @@
 import React from 'react';
 import { reSpeaker, Speaker } from './common';
+import { parseRawText, StoryPart } from './parser';
 
 interface Props {
   momentName: string;
@@ -35,48 +36,6 @@ export class CodeGenerator extends React.Component<Props, State> {
   }
 }
 
-interface StoryNarrationPart {
-  type: 'narration'
-  text: string;
-}
-
-interface StoryDialoguePart {
-  type: 'dialogue'
-  name: string;
-  text: string;
-}
-
-type StoryPart = StoryNarrationPart | StoryDialoguePart;
-
-function parseRawText(rawText: string): StoryPart[] {
-  const storyParts: StoryPart[] = [];
-
-  const lines = rawText.split("\n");
-  for (let line of lines) {
-    line = line.trim();
-    if (!line)
-      continue;
-
-      reSpeaker.lastIndex = 0;
-
-    let match: RegExpExecArray | null = null;
-    if (match = reSpeaker.exec(line)) {
-      storyParts.push({
-        type: 'dialogue',
-        name: match[1],
-        text: match[2],
-      });
-    } else {
-      console.log("no match", line, reSpeaker);
-      storyParts.push({
-        type: 'narration',
-        text: line
-      });
-    }
-  }
-
-  return storyParts;
-}
 
 function updateNames(story: StoryPart[], speakers: Speaker[]) {
   const speakerMap: Map<string, string> = new Map();
