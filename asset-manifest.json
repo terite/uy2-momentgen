@@ -1,15 +1,13 @@
 {
   "files": {
     "main.css": "/uy2-momentgen/static/css/main.9ec43bc9.css",
-    "main.js": "/uy2-momentgen/static/js/main.3b63cd71.js",
-    "static/js/787.6ae4fcff.chunk.js": "/uy2-momentgen/static/js/787.6ae4fcff.chunk.js",
+    "main.js": "/uy2-momentgen/static/js/main.aa36a443.js",
     "index.html": "/uy2-momentgen/index.html",
     "main.9ec43bc9.css.map": "/uy2-momentgen/static/css/main.9ec43bc9.css.map",
-    "main.3b63cd71.js.map": "/uy2-momentgen/static/js/main.3b63cd71.js.map",
-    "787.6ae4fcff.chunk.js.map": "/uy2-momentgen/static/js/787.6ae4fcff.chunk.js.map"
+    "main.aa36a443.js.map": "/uy2-momentgen/static/js/main.aa36a443.js.map"
   },
   "entrypoints": [
     "static/css/main.9ec43bc9.css",
-    "static/js/main.3b63cd71.js"
+    "static/js/main.aa36a443.js"
   ]
 }
