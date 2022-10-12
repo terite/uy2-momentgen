@@ -4,39 +4,35 @@ export function codegenYield(): string {
   throw new Error("not implemented");
 }
 
-export function codegenFunc(momentName: string, story: StoryPart[]): string {
+export function codegenFunc(momentName: string, storyParts: StoryPart[]): string {
   const functions: string[] = [];
   const functionAdds: string[] = [];
 
   let funcBody: string = "";
-  for (const part of story) {
 
+  for (const part of storyParts) {
     if (part.type === "command") {
-      funcBody += `            ${part.code}\n`;
+      funcBody += part.code;
       continue;
     }
 
     if (part.type === "dialogue") {
-      funcBody += `\
-            MM.SetForCharacter("${part.name}");
-            MM.SetNarrationText("${part.text}");\
-`;
+      funcBody += `MM.SetForCharacter("${part.name}");\n`;
+      funcBody += `MM.SetNarrationText("${part.text}");\n`;
     }
     else if (part.type === "narration") {
-      funcBody += `\
-            MM.SetNarrationText("${part.text}");\
-`;
+      funcBody += `MM.SetNarrationText("${part.text}");\n`;
     }
-
 
     const functionName = `func${functions.length + 1}`;
     functionAdds.push(indent(`funcs.Add(${functionName});`, 12));
     functions.push(`\
         void ${functionName}()
         {
-${funcBody}
+${indent(funcBody, 12)}
         }\
 `);
+    funcBody = "";
   }
 
     return `\

@@ -13,7 +13,7 @@ ChangeBackground:SandyCoast
 
 */
 
-import { reSpeaker } from "./common";
+import { reCommand, reSpeaker } from "./common";
 
 interface StoryNarrationPart {
   type: 'narration'
@@ -71,14 +71,18 @@ export function parseRawText(rawText: string): StoryPart[] {
 }
 
 function parseCommand(line: string): StoryCommandPart | null {
-  reSpeaker.lastIndex = 0;
-  const match = reSpeaker.exec(line);
+  reCommand.lastIndex = 0;
+  const match = reCommand.exec(line);
 
   if (!match)
     return null;
 
   const [, commandName, argString] = match;
   const args = argString.split(",").map(s => s.trim());
+
+  function getArg(index: number): string {
+    return args[index] || "<<UNSET>>";
+  }
 
   const command: StoryCommandPart = {
     type: "command",
@@ -88,16 +92,16 @@ function parseCommand(line: string): StoryCommandPart | null {
   };
 
   if (commandName === "CreatePortrait") {
-    command.code = `MM.CreateCharacter("${args[0]}", MomentManager.PortraitPosition.${args[1]});\n`;
+    command.code = `MM.CreateCharacter("${getArg(0)}", MomentManager.PortraitPosition.${getArg(1)});\n`;
     return command;
   } else if (commandName === "FadePrtraitIn") {
-    command.code = `MM.FadePortaitIn("${args[0]}");\n`;
+    command.code = `MM.FadePortaitIn("${getArg(0)}");\n`;
     return command;
   } else if (commandName === "SetFaceExpression") {
-    command.code = `MM.SetCharacterFacialExpression("${args[0]}", CharacterFacialExpressions.${args[1]});\n`;
+    command.code = `MM.SetCharacterFacialExpression("${getArg(0)}", CharacterFacialExpressions.${getArg(1)});\n`;
     return command;
   } else if (commandName === "ChangeBackground") {
-    command.code = `MM.FadeBackgroundIn(MomentManager.BackgroundNames.${args[0]});\n`;
+    command.code = `MM.FadeBackgroundIn(MomentManager.BackgroundNames.${getArg(0)});\n`;
     return command;
   }
 
