@@ -1,5 +1,6 @@
 import React from 'react';
-import { reSpeaker, Speaker } from './common';
+import { codegenFunc, codegenYield } from './codegen';
+import { Speaker } from './common';
 import { parseRawText, StoryPart } from './parser';
 
 interface Props {
@@ -49,61 +50,4 @@ function updateNames(story: StoryPart[], speakers: Speaker[]) {
       part.name = speakerMap.get(part.name) || `${part.name} EMPTY!`
     }
   }
-}
-
-function codegenYield(): string {
-  throw new Error("not implemented");
-}
-
-function codegenFunc(momentName: string, story: StoryPart[]): string {
-  const functions: string[] = [];
-  const functionAdds: string[] = [];
-
-  for (const part of story) {
-    let funcBody: string = "";
-    if (part.type === "dialogue") {
-      funcBody = `\
-            MM.SetForCharacter("${part.name}");
-            MM.SetNarrationText("${part.text}");\
-`;
-    }
-    else if (part.type === "narration") {
-      funcBody = `\
-            MM.SetNarrationText("${part.text}");\
-`;
-    }
-
-
-    const functionName = `func${functions.length + 1}`;
-    functionAdds.push(`            funcs.Add(${functionName});`);
-    functions.push(`\
-        void ${functionName}()
-        {
-${funcBody}
-        }\
-`);
-  }
-
-    return `\
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-
-namespace Moment
-{
-    public class ${momentName} : Moment
-    {
-
-${functions.join("\n\n")}
-
-        public override void Setup()
-        {
-${functionAdds.join("\n")}
-            funcs.Add(End);
-        }
-
-    }
-}
-`;
 }

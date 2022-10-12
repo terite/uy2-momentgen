@@ -1,5 +1,4 @@
 import React from 'react';
-import './App.css';
 import { CodeGenerator } from './CodeGenerator';
 import { Namer } from './Namer';
 import { StoryInput } from './StoryInput';
@@ -9,7 +8,7 @@ interface Props {
 }
 
 interface State {
-  shownPanel: 1 | 2 | 3;
+  shownPanel: 'edit' | 'generate';
   rawText: string;
   speakers: Speaker[];
   momentName: string;
@@ -19,7 +18,7 @@ class App extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      shownPanel: 1,
+      shownPanel: 'edit',
       rawText: "",
       speakers: [],
       momentName: "UPDATEME"
@@ -27,17 +26,36 @@ class App extends React.Component<Props, State> {
   }
 
   handleRawTextChange = (newRawText: string) => {
-    this.setState({
-      rawText: newRawText,
-      speakers: this.parseSpeakers(newRawText),
+    this.setState((oldState) => {
+      const oldSpeakersMap = new Map<string, Speaker>();
+      for (const speaker of oldState.speakers) {
+        oldSpeakersMap.set(speaker.shortName, speaker);
+      }
+
+      const newSpeakers = this.parseSpeakers(newRawText).map(newSpeaker => {
+        if (oldSpeakersMap.has(newSpeaker.shortName)) {
+          return oldSpeakersMap.get(newSpeaker.shortName)!;
+        } else {
+          return newSpeaker;
+        }
+
+      });
+      return {
+        ...oldState,
+        rawText: newRawText,
+        speakers: newSpeakers,
+      }
     });
   };
 
   parseSpeakers(rawText: string): Speaker[] {
     const newSpeakers: Speaker[] = [];
 
-    let match: RegExpExecArray | null = null;
-    while (match = reSpeaker.exec(rawText)) {
+    while (true) {
+      let match = reSpeaker.exec(rawText)
+      if (!match)
+        break;
+
       let found = false;
       for (const speaker of newSpeakers) {
         if (speaker.shortName === match[1]) {
@@ -75,34 +93,45 @@ class App extends React.Component<Props, State> {
       return {
         ...oldState,
         speakers: newSpeakers,
-      } 
+      }
     });
   };
 
-  renderScreen(): React.ReactNode {
-    if (this.state.shownPanel === 1)
-      return <StoryInput
-        rawText={this.state.rawText}
-        onRawTextChange={this.handleRawTextChange} />;
-    else if (this.state.shownPanel === 2)
-      return <Namer
-        momentName={this.state.momentName}
-        onMomentNameChange={this.handleMomentNameChange}
-        speakers={this.state.speakers}
-        onSpeakerChange={this.handleSpeakerChange} />;
-    else
+  renderBody(): React.ReactNode {
+    if (this.state.shownPanel === 'edit') {
+      return <div className="body">
+        <div className="left">
+          <StoryInput
+            rawText={this.state.rawText}
+            onRawTextChange={this.handleRawTextChange} />
+        </div>
+        <div className="right">
+          <Namer
+            momentName={this.state.momentName}
+            onMomentNameChange={this.handleMomentNameChange}
+            speakers={this.state.speakers}
+            onSpeakerChange={this.handleSpeakerChange} />
+        </div>
+      </div>
+    }
+    else {
       return <CodeGenerator
         momentName={this.state.momentName}
         rawText={this.state.rawText}
-        speakers={this.state.speakers} />;
+        speakers={this.state.speakers} />
+    }
   }
 
   renderNavBar(): React.ReactNode {
-    return <div className="navbar">
-      <button onClick={() => this.setState({ shownPanel: 1 })} disabled={this.state.shownPanel === 1}>1</button>
-      <button onClick={() => this.setState({ shownPanel: 2 })} disabled={this.state.shownPanel === 2}>2</button>
-      <button onClick={() => this.setState({ shownPanel: 3 })} disabled={this.state.shownPanel === 3}>3</button>
-    </div>
+    if (this.state.shownPanel === 'edit') {
+      return <div className="navbar">
+        <button onClick={() => this.setState({ shownPanel: 'generate' })}>Generate</button>
+      </div>
+    } else {
+      return <div className="navbar">
+        <button onClick={() => this.setState({ shownPanel: 'edit' })}>edit</button>
+      </div>
+    }
   }
 
   render(): React.ReactNode {
@@ -110,7 +139,7 @@ class App extends React.Component<Props, State> {
       <div className="App">
         {this.renderNavBar()}
         <hr />
-        {this.renderScreen()}
+        {this.renderBody()}
       </div>
     );
   }

@@ -27,10 +27,13 @@ interface StoryDialoguePart {
 }
 
 interface StoryCommandPart {
-  type: 'command'
+  type: 'command',
+  command: string,
+  arguments: string[],
+  code: string,
 }
 
-export type StoryPart = StoryNarrationPart | StoryDialoguePart;
+export type StoryPart = StoryNarrationPart | StoryDialoguePart | StoryCommandPart;
 
 export function parseRawText(rawText: string): StoryPart[] {
   const storyParts: StoryPart[] = [];
@@ -41,22 +44,62 @@ export function parseRawText(rawText: string): StoryPart[] {
     if (!line)
       continue;
 
-      reSpeaker.lastIndex = 0;
+    const command = parseCommand(line);
+    if (command) {
+      storyParts.push(command);
+      continue;
+    }
 
-    let match: RegExpExecArray | null = null;
-    if (match = reSpeaker.exec(line)) {
+    reSpeaker.lastIndex = 0;
+    const dialogueMatch = reSpeaker.exec(line);
+    if (dialogueMatch) {
       storyParts.push({
         type: 'dialogue',
-        name: match[1],
-        text: match[2],
+        name: dialogueMatch[1],
+        text: dialogueMatch[2],
       });
-    } else {
-      storyParts.push({
-        type: 'narration',
-        text: line
-      });
+      continue;
     }
+
+    storyParts.push({
+      type: 'narration',
+      text: line
+    });
   }
 
   return storyParts;
+}
+
+function parseCommand(line: string): StoryCommandPart | null {
+  reSpeaker.lastIndex = 0;
+  const match = reSpeaker.exec(line);
+
+  if (!match)
+    return null;
+
+  const [, commandName, argString] = match;
+  const args = argString.split(",").map(s => s.trim());
+
+  const command: StoryCommandPart = {
+    type: "command",
+    command: commandName,
+    arguments: args,
+    code: "",
+  };
+
+  if (commandName === "CreatePortrait") {
+    command.code = `MM.CreateCharacter("${args[0]}", MomentManager.PortraitPosition.${args[1]});\n`;
+    return command;
+  } else if (commandName === "FadePrtraitIn") {
+    command.code = `MM.FadePortaitIn("${args[0]}");\n`;
+    return command;
+  } else if (commandName === "SetFaceExpression") {
+    command.code = `MM.SetCharacterFacialExpression("${args[0]}", CharacterFacialExpressions.${args[1]});\n`;
+    return command;
+  } else if (commandName === "ChangeBackground") {
+    command.code = `MM.FadeBackgroundIn(MomentManager.BackgroundNames.${args[0]});\n`;
+    return command;
+  }
+
+  return null;
 }
